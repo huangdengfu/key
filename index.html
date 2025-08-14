@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>船型开关筛选器（动态数据版）</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif
+    }
+
+    body {
+      background: linear-gradient(135deg, #1a2a6c, #2c3e50);
+      color: #333;
+      min-height: 100vh;
+      padding: 20px
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto
+    }
+
+    header {
+      text-align: center;
+      padding: 30px 20px;
+      color: #fff;
+      margin-bottom: 30px
+    }
+
+    header h1 {
+      font-size: 2.8rem;
+      margin-bottom: 10px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, .3)
+    }
+
+    header p {
+      font-size: 1.2rem;
+      max-width: 900px;
+      margin: 0 auto;
+      color: #e0e0e0
+    }
+
+    .content-wrapper {
+      display: flex;
+      gap: 25px;
+      flex-wrap: wrap
+    }
+
+    .filters {
+      flex: 1;
+      min-width: 320px;
+      background: #fff;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .2)
+    }
+
+    .results {
+      flex: 3;
+      min-width: 300px;
+      background: #fff;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .2)
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #3498db;
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .filter-group {
+      margin-bottom: 22px
+    }
+
+    .filter-group h3 {
+      margin-bottom: 12px;
+      color: #2980b9;
+      font-size: 1.05rem;
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .filter-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px
+    }
+
+    .filter-option {
+      background: #f8f9fa;
+      border: 1px solid #ddd;
+      padding: 10px 15px;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all .3s ease;
+      font-size: .9rem;
+      user-select: none
+    }
+
+    .filter-option:hover {
+      background: #e3f2fd;
+      border-color: #3498db
+    }
+
+    .filter-option.active {
+      background: #3498db;
+      color: #fff;
+      border-color: #3498db
+    }
+
+    .search-box {
+      position: relative;
+      margin: 25px 0
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 14px 20px 14px 45px;
+      border: 2px solid #ddd;
+      border-radius: 50px;
+      font-size: 1rem;
+      transition: all .3s ease
+    }
+
+    .search-box input:focus {
+      border-color: #3498db;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, .2)
+    }
+
+    .search-box i {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #777
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 12px 0;
+      border-bottom: 1px solid #eee;
+      gap: 12px;
+      flex-wrap: wrap
+    }
+
+    .result-count {
+      font-size: 1.05rem;
+      color: #2c3e50
+    }
+
+    .sorting select {
+      padding: 8px 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background: #fff
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px
+    }
+
+    .product-card {
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      overflow: hidden;
+      transition: transform .3s ease, box-shadow .3s ease;
+      background: #fff;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, .05)
+    }
+
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, .1)
+    }
+
+    .product-image {
+      height: 180px;
+      background: linear-gradient(45deg, #3498db, #2c3e50);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      font-size: 3rem
+    }
+
+    .product-info {
+      padding: 20px
+    }
+
+    .product-series {
+      display: inline-block;
+      background: #3498db;
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: .9rem;
+      margin-bottom: 10px
+    }
+
+    .product-title {
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+      color: #2c3e50;
+      min-height: 60px;
+      line-height: 1.35
+    }
+
+    .product-specs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap
+    }
+
+    .spec {
+      background: #f8f9fa;
+      padding: 6px 10px;
+      border-radius: 5px;
+      font-size: .9rem
+    }
+
+    .product-link {
+      display: block;
+      text-align: center;
+      background: #2ecc71;
+      color: #fff;
+      padding: 12px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: background .3s ease;
+      margin-top: 10px
+    }
+
+    .product-link:hover {
+      background: #27ae60
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 40px;
+      grid-column: 1 / -1
+    }
+
+    .no-results i {
+      font-size: 4rem;
+      color: #e74c3c;
+      margin-bottom: 20px
+    }
+
+    .no-results h3 {
+      font-size: 1.6rem;
+      margin-bottom: 10px;
+      color: #2c3e50
+    }
+
+    .reset-btn {
+      width: 100%;
+      justify-content: center;
+      background: #e74c3c;
+      color: #fff;
+      margin-top: 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: .95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s ease
+    }
+
+    .reset-btn:hover {
+      background: #c0392b
+    }
+
+    .footer {
+      text-align: center;
+      color: #fff;
+      padding: 30px;
+      margin-top: 40px;
+      font-size: .9rem;
+      opacity: .8
+    }
+
+    hr.soft {
+      border: none;
+      border-top: 1px solid #e5e7eb;
+      margin: 16px 0
+    }
+
+    /* 平滑滚动体验 */
+    html {
+      scroll-behavior: smooth
+    }
+
+    /* 回到顶部悬浮按钮 */
+    #back-to-top {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      width: 44px;
+      height: 44px;
+      border: none;
+      border-radius: 999px;
+      background: #3498db;
+      color: #fff;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, .15);
+      cursor: pointer;
+      transition: opacity .25s ease, transform .25s ease, filter .15s ease;
+      opacity: 0;
+      transform: translateY(10px);
+      z-index: 50
+    }
+
+    #back-to-top.show {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0)
+    }
+
+    #back-to-top:hover {
+      filter: brightness(.95)
+    }
+
+    #back-to-top i {
+      font-size: 18px
+    }
+
+    @media (max-width:768px) {
+      .content-wrapper {
+        flex-direction: column
+      }
+
+      .products-grid {
+        grid-template-columns: 1fr
+      }
+
+      header h1 {
+        font-size: 2.2rem
+      }
+
+      #back-to-top {
+        right: 16px;
+        bottom: 16px;
+        width: 40px;
+        height: 40px
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1><i class="fas fa-toggle-on"></i> 船型开关筛选器</h1>
+      <p>用于快速查询是否有满足需求的船型开关 | Telesky旗舰店</p>
+    </header>
+
+    <div class="content-wrapper">
+      <div class="filters">
+        <h2 class="section-title"><i class="fas fa-filter"></i> 筛选条件</h2>
+
+        <div class="filter-group">
+          <h3><i class="fas fa-list"></i> 产品系列</h3>
+          <div class="filter-options" id="series-options"></div>
+        </div>
+
+        <div class="filter-group">
+          <h3><i class="fas fa-microchip"></i> 引脚数量</h3>
+          <div class="filter-options" id="pins-options"></div>
+        </div>
+
+        <div class="filter-group">
+          <h3><i class="fas fa-sliders-h"></i> 档位数量</h3>
+          <div class="filter-options" id="positions-options"></div>
+        </div>
+
+        <div class="filter-group">
+          <h3><i class="fas fa-lightbulb"></i> 指示灯</h3>
+          <div class="filter-options" id="light-options"></div>
+        </div>
+
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" id="search-input" placeholder="输入关键词（关键词查找）..." />
+        </div>
+
+        <button class="reset-btn" id="reset-filters">
+          <i class="fas fa-sync-alt"></i> 重置所有筛选条件
+        </button>
+      </div>
+
+      <div class="results">
+        <div class="stats">
+          <div class="result-count">找到 <span id="result-count">0</span> 个产品</div>
+          <div class="sorting">
+            <select id="sort-by">
+              <option value="default">默认排序</option>
+              <option value="pins">引脚数从少到多</option>
+              <option value="pinsDesc">引脚数从多到少</option>
+              <option value="positions">档位数从少到多</option>
+              <option value="positionsDesc">档位数从多到少</option>
+            </select>
+          </div>
+        </div>
+        <div class="products-grid" id="products-container"></div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>© 2025 船型开关筛选器 | Telesky 旗舰店 https://telesky.tmall.com</p>
+    </div>
+  </div>
+
+  <!-- 回到顶部按钮 -->
+  <button id="back-to-top" aria-label="回到顶部" title="回到顶部">
+    <i class="fas fa-arrow-up"></i>
+  </button>
+
+  <script>
+    // —— 回到顶部 —— //
+    const backTopBtn = document.getElementById('back-to-top');
+    const updateBackTop = () => {
+      const y = window.scrollY || document.documentElement.scrollTop;
+      backTopBtn.classList.toggle('show', y > 400);
+    };
+    window.addEventListener('scroll', updateBackTop);
+    backTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    updateBackTop();
+
+    // ===== 1) 内置示例 =====
+    const sampleProducts = [
+      { spec: "KCD1 2脚2档 红色 铜脚 （2个）", series: "KCD1", pins: "2", positions: "2", skuLink: "https://detail.tmall.com/item.htm?id=41210111230&skuId=3771562397627", light: "无灯" },
+      { spec: "KCD1 3脚2档 红灯 铜脚（2个）", series: "KCD1", pins: "3", positions: "2", skuLink: "https://detail.tmall.com/item.htm?id=41210111230&skuId=3942233594085", light: "带灯" },
+      { spec: "KCD3 两档3脚 黑色红灯（1个）", series: "KCD3", pins: "3", positions: "2", skuLink: "https://detail.tmall.com/item.htm?id=41210111230&skuId=4394192173810", light: "带灯" },
+      { spec: "KCD4 4脚2档绿灯 1个", series: "KCD4", pins: "4", positions: "2", skuLink: "https://detail.tmall.com/item.htm?id=41210111230&skuId=4919743109654", light: "带灯" },
+      { spec: "KCD11 2脚2档 红色 KCD11 10x15mm（5个）", series: "KCD11", pins: "2", positions: "2", skuLink: "https://detail.tmall.com/item.htm?id=41210111230&skuId=4919743109681", light: "无灯" },
+      { spec: "圆形开关 开孔11.5MM 有档开关带线（自锁）红色（1个）", series: "圆形", pins: "2", positions: "2", skuLink: "https://detail.tmall.com/item.htm?id=41210111230&skuId=4919743109587", light: "无灯" },
+      { spec: "全圆实心红色不带灯2档3脚 铜脚 （2个）", series: "全圆", pins: "3", positions: "2", skuLink: "https://detail.tmall.com/item.htm?id=41210111230&skuId=4919743109698", light: "无灯" }
+    ];
+
+    // ===== 2) 全局状态 =====
+    const LS_KEY = "rockerSwitchProducts";
+    let products = [];
+    let filters = { series: "all", pins: "all", positions: "all", light: "all", search: "" };
+
+    const productsContainer = document.getElementById("products-container");
+    const resultCount = document.getElementById("result-count");
+    const searchInput = document.getElementById("search-input");
+    const resetBtn = document.getElementById("reset-filters");
+    const sortSelect = document.getElementById("sort-by");
+    // 数据状态面板已移除：下面两个为兼容保留但不使用
+    const dataStatus = null;
+
+    // 本地文件自动加载
+    const LOCAL_SOURCES = ['./data/products.json', './data/products.csv', './products.json', './products.csv'];
+
+    // ===== 3) 工具函数 =====
+    function showStatus(msg, type = "info") {
+      // UI面板已移除，这里仅在控制台输出，避免报错
+      const tag = type.toUpperCase();
+      (type === 'error' ? console.error : type === 'warn' ? console.warn : console.log)(`[${tag}] ${msg.replace(/<[^>]+>/g, '')}`);
+    }
+    function hideStatus() { /* 无 UI 时无需处理 */ }
+
+    function normalizeRecord(r) {
+      const t = v => (v == null ? "" : String(v).trim());
+      let o = { spec: t(r.spec), series: t(r.series), pins: t(r.pins), positions: t(r.positions), skuLink: t(r.skuLink), light: t(r.light) };
+      const toIntStr = v => { const n = parseInt(v, 10); return Number.isFinite(n) ? String(n) : ""; };
+      o.pins = toIntStr(o.pins); o.positions = toIntStr(o.positions);
+      const lamp = o.light.replace(/\s/g, "").toLowerCase();
+      if (["lamp", "led", "light", "withlight", "带灯", "有灯"].includes(lamp)) o.light = "带灯";
+      else if (["nolamp", "withoutlight", "无灯", "不带灯"].includes(lamp)) o.light = "无灯";
+      return o;
+    }
+
+    function validateRecord(o) {
+      const req = ["spec", "series", "pins", "positions", "skuLink", "light"];
+      for (const k of req) if (!o[k]) return `缺少字段: ${k}`;
+      if (!/^\d+$/.test(o.pins)) return "pins 必须是整数";
+      if (!/^\d+$/.test(o.positions)) return "positions 必须是整数";
+      if (!/^https?:\/\//i.test(o.skuLink)) return "skuLink 需要 http/https 链接";
+      if (!["带灯", "无灯"].includes(o.light)) return "light 仅支持：带灯/无灯";
+      return null;
+    }
+
+    const toUnifiedList = x => (Array.isArray(x) ? x : (Array.isArray(x?.items) ? x.items : [])).map(normalizeRecord);
+
+    function setProducts(newList, mode = "replace") {
+      products = (mode === "replace") ? [...newList] : [...products, ...newList];
+      const seen = new Set();
+      products = products.filter(p => { const key = [p.spec, p.series, p.pins, p.positions, p.light].join("|"); if (seen.has(key)) return false; seen.add(key); return true; });
+      localStorage.setItem(LS_KEY, JSON.stringify({ ts: Date.now(), items: products }));
+      buildAllFacets(products);
+      applyFilters();
+      showStatus(`已加载数据 ${products.length} 条。`, "success");
+    }
+
+    function parseCsv(text) {
+      if (window.Papa) { const out = Papa.parse(text, { header: true, skipEmptyLines: true }); return out.data; }
+      const [head, ...rows] = text.split(/\r?\n/).filter(Boolean);
+      const headers = head.split(",").map(s => s.trim());
+      return rows.map(line => { const cols = line.split(","); const o = {}; headers.forEach((h, i) => o[h] = cols[i] ?? ""); return o; });
+    }
+
+    function ingest(list, mode = "replace") {
+      const arr = toUnifiedList(list);
+      const ok = [], bad = [];
+      arr.forEach((o, i) => { const err = validateRecord(o); if (err) bad.push({ i, err }); else ok.push(o); });
+      if (bad.length) showStatus(`有 ${bad.length} 条记录不合规，已跳过。例如第 ${bad[0].i + 1} 行：${bad[0].err}`, "warn");
+      if (!ok.length) return showStatus(`没有可导入的有效记录。`, "error");
+      setProducts(ok, mode);
+    }
+
+    // —— 动态筛选项 —— //
+    function sortSeries(a, b) {
+      const ma = /^KCD(\d+)/i.exec(a), mb = /^KCD(\d+)/i.exec(b);
+      if (ma && mb) return (+ma[1]) - (+mb[1]);
+      if (ma) return -1; if (mb) return 1;
+      return a.localeCompare(b, 'zh');
+    }
+    const sortNumericAsc = (a, b) => (+a) - (+b);
+
+    function buildOptions(container, key, values) {
+      const current = filters[key];
+      if (!values.includes(current)) filters[key] = 'all';
+      const chips = [`<div class="filter-option ${filters[key] === 'all' ? 'active' : ''}" data-filter="${key}" data-value="all">全部${key === 'series' ? '系列' : ''}</div>`]
+        .concat(values.map(v => `<div class="filter-option ${v === filters[key] ? 'active' : ''}" data-filter="${key}" data-value="${v}">${v}${key === 'pins' ? '脚' : ''}${key === 'positions' ? '档' : ''}</div>`));
+      container.innerHTML = chips.join('');
+    }
+
+    function buildAllFacets(list) {
+      const s = new Set(), p = new Set(), po = new Set(), l = new Set();
+      list.forEach(x => { if (x.series) s.add(x.series.trim()); if (x.pins) p.add(String(x.pins)); if (x.positions) po.add(String(x.positions)); if (x.light) l.add(x.light.trim()); });
+      buildOptions(document.getElementById('series-options'), 'series', Array.from(s).sort(sortSeries));
+      buildOptions(document.getElementById('pins-options'), 'pins', Array.from(p).sort(sortNumericAsc));
+      buildOptions(document.getElementById('positions-options'), 'positions', Array.from(po).sort(sortNumericAsc));
+      buildOptions(document.getElementById('light-options'), 'light', Array.from(l).sort((a, b) => a.localeCompare(b, 'zh')));
+    }
+
+    // —— 本地文件加载 —— //
+    async function loadFromLocalFiles() {
+      hideStatus();
+      for (const path of LOCAL_SOURCES) {
+        try {
+          const res = await fetch(path + (path.includes('?') ? '&' : '?') + 't=' + Date.now(), { cache: 'no-store' });
+          if (!res.ok) continue;
+          const ct = (res.headers.get('content-type') || '').toLowerCase();
+          if (ct.includes('json') || path.toLowerCase().endsWith('.json')) {
+            const json = await res.json(); ingest(json, 'replace');
+          } else {
+            const text = await res.text(); const rows = parseCsv(text); ingest(rows, 'replace');
+          }
+          showStatus(`已从本地文件加载：${path}`, 'success');
+          return true;
+        } catch (e) { /* try next */ }
+      }
+      showStatus('未找到本地数据文件，已使用内置示例。', 'warn');
+      return false;
+    }
+
+    // ===== 4) 事件绑定（委托支持动态按钮） =====
+    function setupEventListeners() {
+      document.querySelector('.filters').addEventListener('click', (e) => {
+        const btn = e.target.closest('.filter-option');
+        if (!btn || !btn.dataset.filter) return;
+        const group = btn.closest('.filter-options');
+        group.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active'));
+        btn.classList.add('active');
+        filters[btn.dataset.filter] = btn.dataset.value;
+        applyFilters();
+      });
+
+      document.getElementById('search-input').addEventListener('input', function () {
+        filters.search = this.value.toLowerCase(); applyFilters();
+      });
+
+      document.getElementById('reset-filters').addEventListener('click', () => {
+        filters = { series: 'all', pins: 'all', positions: 'all', light: 'all', search: '' };
+        buildAllFacets(products);
+        document.getElementById('search-input').value = '';
+        document.getElementById('sort-by').value = 'default';
+        applyFilters();
+      });
+
+      document.getElementById('sort-by').addEventListener('change', applyFilters);
+    }
+
+    // ===== 5) 过滤 / 渲染 =====
+    function colorForSeries(s) {
+      const fixed = { KCD1: '#3498db', KCD3: '#2ecc71', KCD4: '#e74c3c', KCD11: '#f39c12', '圆形': '#9b59b6', '全圆': '#1abc9c' };
+      if (fixed[s]) return fixed[s];
+      let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+      return `hsl(${h % 360} 60% 45%)`;
+    }
+
+    function applyFilters() {
+      let list = [...products];
+      if (filters.series !== 'all') list = list.filter(p => p.series === filters.series);
+      if (filters.pins !== 'all') list = list.filter(p => p.pins === filters.pins);
+      if (filters.positions !== 'all') list = list.filter(p => p.positions === filters.positions);
+      if (filters.light !== 'all') list = list.filter(p => p.light === filters.light);
+      if (filters.search) list = list.filter(p => (p.spec || '').toLowerCase().includes(filters.search));
+      const sortBy = document.getElementById('sort-by').value;
+      if (sortBy === 'pins') {
+        list.sort((a, b) => (+a.pins) - (+b.pins));
+      } else if (sortBy === 'pinsDesc') {
+        list.sort((a, b) => (+b.pins) - (+a.pins));
+      } else if (sortBy === 'positions') {
+        list.sort((a, b) => (+a.positions) - (+b.positions));
+      } else if (sortBy === 'positionsDesc') {
+        list.sort((a, b) => (+b.positions) - (+a.positions));
+      }
+      renderProducts(list);
+    }
+
+    function renderProducts(list) {
+      resultCount.textContent = list.length;
+      productsContainer.innerHTML = '';
+      if (!list.length) {
+        productsContainer.innerHTML = `<div class="no-results"><i class="fas fa-search"></i><h3>没有找到匹配的产品</h3><p>请尝试调整筛选条件或搜索关键词</p></div>`;
+        return;
+      }
+      list.forEach(p => {
+        const card = document.createElement('div'); card.className = 'product-card';
+        const bg = colorForSeries(p.series || '');
+        card.innerHTML = `
+          <div class="product-image" style="background: linear-gradient(45deg, ${bg}, #2c3e50)">
+            <i class="fas fa-toggle-on"></i>
+          </div>
+          <div class="product-info">
+            <div class="product-series">${p.series || '未分组'} 系列</div>
+            <h3 class="product-title">${p.spec || ''}</h3>
+            <div class="product-specs">
+              <div class="spec"><i class="fas fa-microchip"></i> ${p.pins}脚</div>
+              <div class="spec"><i class="fas fa-sliders-h"></i> ${p.positions}档</div>
+              <div class="spec"><i class="fas fa-lightbulb"></i> ${p.light}</div>
+            </div>
+            <a href="${p.skuLink}" target="_blank" class="product-link">查看产品详情 <i class="fas fa-external-link-alt"></i></a>
+          </div>`;
+        productsContainer.appendChild(card);
+      });
+    }
+
+    // ===== 6) 初始化 =====
+    function init() {
+      setupEventListeners();
+      loadFromLocalFiles().then(ok => {
+        if (!ok) setProducts(sampleProducts, 'replace');
+      }).catch(err => {
+        console.error(err); setProducts(sampleProducts, 'replace');
+      });
+    }
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+
+</html>
