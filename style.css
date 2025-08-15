@@ -121,8 +121,8 @@ header p {
 .search-box input {
   width: 100%;
   padding: 14px 20px 14px 45px;
-  border: 2px solid #ddd;
-  border-radius: 50px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
   font-size: 1rem;
   transition: all .3s ease;
 }
@@ -451,3 +451,4 @@ html {
     flex-direction: column;
   }
 }
+
