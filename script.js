@@ -39,6 +39,7 @@ const searchInput = document.getElementById("search-input");
 const resetBtn = document.getElementById("reset-filters");
 const sortSelect = document.getElementById("sort-by");
 const sizeInput = document.getElementById("size-input");
+const copyNotification = document.getElementById("copy-notification");
 
 // 本地文件自动加载
 const LOCAL_SOURCES = ['./data/products.json', './data/products.csv', './products.json', './products.csv'];
@@ -182,6 +183,20 @@ function calculateSizeDifference(targetSize, productSize) {
   return Math.abs(targetSize - productSize.length);
 }
 
+// 复制链接函数
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    // 显示复制成功通知
+    copyNotification.classList.add('show');
+    setTimeout(() => {
+      copyNotification.classList.remove('show');
+    }, 2000);
+  }).catch(err => {
+    console.error('复制失败:', err);
+    alert('复制链接失败，请手动复制');
+  });
+}
+
 // 本地文件加载
 async function loadFromLocalFiles() {
   hideStatus();
@@ -219,7 +234,7 @@ function setupEventListeners() {
     filters.search = this.value.toLowerCase(); applyFilters();
   });
 
-  // 新增：尺寸输入事件监听
+  // 尺寸输入事件监听
   document.getElementById('size-input').addEventListener('input', function () {
     // 只允许输入数字和小数点
     this.value = this.value.replace(/[^\d.]/g, '');
@@ -237,6 +252,15 @@ function setupEventListeners() {
   });
 
   document.getElementById('sort-by').addEventListener('change', applyFilters);
+
+  // 委托处理复制链接按钮点击事件
+  document.getElementById('products-container').addEventListener('click', function (e) {
+    if (e.target.closest('.copy-link')) {
+      const card = e.target.closest('.product-card');
+      const link = card.querySelector('.product-link').href;
+      copyToClipboard(link);
+    }
+  });
 }
 
 // ===== 5) 过滤 / 渲染 =====
@@ -255,7 +279,7 @@ function applyFilters() {
   if (filters.light !== 'all') list = list.filter(p => p.light === filters.light);
   if (filters.search) list = list.filter(p => (p.spec || '').toLowerCase().includes(filters.search));
 
-  // 新增：尺寸筛选逻辑
+  // 尺寸筛选逻辑
   const targetSize = parseFloat(filters.size);
   let sizeDiffMap = new Map();
   let filteredList = [];
@@ -407,7 +431,14 @@ function renderProducts(list, sizeDiffMap, targetSize) {
               <div class="spec"><i class="fas fa-lightbulb"></i> ${p.light}</div>
               <div class="spec size-value"><i class="fas fa-ruler"></i> ${sizeValue}</div>
             </div>
-            <a href="${p.skuLink}" target="_blank" class="product-link">查看产品详情 <i class="fas fa-external-link-alt"></i></a>
+            <div class="product-actions">
+              <a href="${p.skuLink}" target="_blank" class="product-link">
+                <i class="fas fa-external-link-alt"></i> 查看详情
+              </a>
+              <button class="copy-link" data-link="${p.skuLink}">
+                <i class="fas fa-copy"></i> 复制链接
+              </button>
+            </div>
           </div>`;
     productsContainer.appendChild(card);
   });
