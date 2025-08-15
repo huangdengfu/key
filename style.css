@@ -237,8 +237,14 @@ header p {
   font-weight: 600;
 }
 
+.product-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
 .product-link {
-  display: block;
+  flex: 1;
   text-align: center;
   background: #2ecc71;
   color: #fff;
@@ -246,12 +252,37 @@ header p {
   border-radius: 5px;
   text-decoration: none;
   font-weight: 600;
-  transition: background .3s ease;
-  margin-top: 10px;
+  transition: all .3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .product-link:hover {
   background: #27ae60;
+}
+
+.copy-link {
+  flex: 1;
+  text-align: center;
+  background: #3498db;
+  color: #fff;
+  padding: 12px;
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all .3s ease;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.copy-link:hover {
+  background: #2980b9;
 }
 
 .no-results {
@@ -329,6 +360,28 @@ hr.soft {
   color: white;
 }
 
+/* 复制成功提示 */
+.copy-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(46, 204, 113, 0.9);
+  color: white;
+  padding: 15px 25px;
+  border-radius: 5px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 1000;
+  transform: translateX(120%);
+  transition: transform 0.3s ease-out;
+}
+
+.copy-notification.show {
+  transform: translateX(0);
+}
+
 /* 平滑滚动体验 */
 html {
   scroll-behavior: smooth;
@@ -392,5 +445,9 @@ html {
     bottom: 16px;
     width: 40px;
     height: 40px;
+  }
+
+  .product-actions {
+    flex-direction: column;
   }
 }
