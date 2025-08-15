@@ -7,7 +7,7 @@
   <title>船型开关筛选器</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
@@ -41,7 +41,7 @@
           <div class="filter-options" id="light-options"></div>
         </div>
 
-        <!-- 新增尺寸筛选输入框 -->
+        <!-- 尺寸筛选输入框 -->
         <div class="filter-group">
           <h3><i class="fas fa-ruler"></i> 尺寸筛选 (长度/直径)</h3>
           <div class="search-box">
@@ -91,6 +91,12 @@
   <button id="back-to-top" aria-label="回到顶部" title="回到顶部">
     <i class="fas fa-arrow-up"></i>
   </button>
+
+  <!-- 复制成功提示 -->
+  <div class="copy-notification" id="copy-notification">
+    <i class="fas fa-check-circle"></i>
+    <span>链接已复制到剪贴板！</span>
+  </div>
 
   <script src="script.js"></script>
 </body>
